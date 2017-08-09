@@ -48,3 +48,38 @@
 
 - include: firewalld.yml
   when: ipaserver_manage_firewalld
+
+- name: Setup SCEP - Disable deferOnFailure
+  lineinfile:
+    dest: /var/lib/pki/pki-tomcat/ca/conf/CS.cfg
+    regexp: "^auths.instance.flatFileAuth.deferOnFailure"
+    line: "auths.instance.flatFileAuth.deferOnFailure=true"
+    state: present
+
+- name: Setup SCEP - Disable deferOnFailure
+  lineinfile:
+    dest: /var/lib/pki/pki-tomcat/ca/conf/CS.cfg
+    regexp: "^ca.scep.enable"
+    line: "ca.scep.enable=true"
+    state: present
+
+- name: Setup SCEP - Disable deferOnFailure
+  lineinfile:
+    dest: /var/lib/pki/pki-tomcat/ca/conf/CS.cfg
+    regexp: "^ca.scep.allowedEncryptionAlgorithms"
+    line: "ca.scep.allowedEncryptionAlgorithms=DES,DES3"
+    state: present
+
+- name: Setup SCEP - Disable deferOnFailure
+  blockinfile:
+    dest: /var/lib/pki/pki-tomcat/ca/conf/flatfile.txt
+    state: present
+    block: |
+      UID:192.168.1.15
+      PWD:password
+
+- name: Restart PKI Service
+  service:
+    name: pki-tomcatd@pki-tomcat.service
+    state: restarted
+
