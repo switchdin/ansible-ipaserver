@@ -1,8 +1,21 @@
 ---
 #firewalld doesn't exist on AWS CentOS 7 by default
-- name: Make sure firewalld is installed
+- name: Make sure firewalld is installed (yum)
   yum: name=firewalld state=present
-  when: ansible_os_family == "RedHat"
+  when: ansible_distribution == "CentOS" or
+        (ansible_distribution == "Fedora" and ansible_distribution_version|int <= 21)
+
+- name: Make sure firewalld is installed (dnf)
+  dnf: name=firewalld state=present
+  when: ansible_distribution == "Fedora" and ansible_distribution_version|int > 21
+
+- name: Install Ansible Python 2 Dependencies For Firewalld
+  dnf:
+    name: "{{item}}"
+    state: present
+  with_items:
+  - python-firewall
+  when: ansible_distribution == "Fedora" and ansible_distribution_version|int > 21
 
 #The firewalld ruleset configuration will fail
 #unless we start firewalld
