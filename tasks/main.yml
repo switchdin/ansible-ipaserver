@@ -1,15 +1,16 @@
 ---
 - name: Hard set the hostname
-  hostname: name={{ ansible_fqdn }}
+  hostname: name={{ ipaserver_fqdn }}
 
 - name: Add host entry
   lineinfile:
     dest=/etc/hosts
-    regexp=" {{ ansible_hostname }} "
-    line="{{ ansible_default_ipv4.address }} {{ ansible_fqdn }}"
+    regexp="^{{ ansible_default_ipv4.address }} "
+    line="{{ ansible_default_ipv4.address }}    {{ ipaserver_fqdn }} {{ipaserver_hostname }}"
     owner=root
     group=root
     mode=0644
+    state=present
 
 - name: Ensure software is installed (yum)
   yum: name={{ item }} state=present
@@ -25,18 +26,18 @@
 - name: Run the installer
   action: command
     {{ ipaserver_base_command }}
-    --realm {{ ipaserver_realm }}
-    --domain {{ ipaserver_domain }}
+    -U
+    {{ '--setup-dns' if ipaserver_setup_dns | default(True) else '' }}
+    -r {{ ipaserver_realm }}
+    -n {{ ipaserver_domain }}
     -a {{ ipaserver_admin_password }}
     -p {{ ipaserver_dir_admin_password }}
-    --hostname={{ ansible_fqdn }}
+    --hostname={{ ipaserver_fqdn }}
     --ip-address={{ ansible_default_ipv4.address }}
     {{ '--idstart=%s' % ipaserver_idstart if ipaserver_idstart | default(False) else '' }}
     {{ '--idmax=%s' % ipaserver_idmax if ipaserver_idmax | default(False) else '' }}
-    {{ '--forwarder=%s' % ipaserver_dns_forwarder
-       if ipaserver_dns_forwarder | default(False) else '--no-forwarders' }}
+    {{ '--forwarder=%s' % ipaserver_dns_forwarder if ipaserver_dns_forwarder | default(False) else '--no-forwarders' }}
     {{ '--mkhomedir' if ipaserver_mkhomedir | default(True) else '' }}
-    {{ '--setup-dns' if ipaserver_setup_dns | default(True) else '' }}
     {{ '--ssh-trust-dns' if ipaserver_ssh_trust_dns | default(True) else '' }}
     {{ '' if ipaserver_hbac_allow | default(True) else '--no_hbac_allow' }}
     {{ '' if ipaserver_setup_ntp | default(True) else '--no-ntp' }}
